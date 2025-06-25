@@ -47,6 +47,8 @@ export default async function handler(req, res) {
 
   const data = await response.json();
   const customer = data.data?.customer;
+  const shopifyCustomerId = customer?.id;
+
 
   if (!customer) {
     return res.status(200).json({
@@ -57,6 +59,7 @@ export default async function handler(req, res) {
       carbonSequestered: 0,
       carbonFootprintAvoided: 0,
       waterSaved: 0,
+      shopifyCustomerId
     });
   }
 
