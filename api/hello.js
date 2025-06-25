@@ -23,8 +23,10 @@ export default async function handler(req, res) {
     body: JSON.stringify({
       query: `
         {
-          customer(customerAccessToken: "${token}") {
-            orders(first: 100) {
+          {
+  customer(customerAccessToken: "${token}") {
+    id
+    orders(first: 100) {
               edges {
                 node {
                   lineItems(first: 5) {
