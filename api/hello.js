@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const url = new URL(req.url || "", http://${req.headers.host});
+  const url = new URL(req.url || "", `http://${req.headers.host}`);
   const token = url.searchParams.get("token");
 
   if (!token) {
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       "X-Shopify-Storefront-Access-Token": "8b1f2fc60905539067a137028435c86a",
     },
     body: JSON.stringify({
-      query: 
+      query: `
         {
           customer(customerAccessToken: "${token}") {
             orders(first: 100) {
@@ -34,19 +34,28 @@ export default async function handler(req, res) {
                       }
                     }
                   }
+                  customer {
+                    id
+                  }
                 }
               }
             }
           }
         }
-      
+      `
     })
   });
 
   const data = await response.json();
-  const customer = data.data?.customer;
+  console.log("📦 Shopify Raw Response:", JSON.stringify(data, null, 2));
 
-  if (!customer) {
+  const customer = data.data?.customer;
+  const orders = customer?.orders?.edges || [];
+
+  // Extract Shopify customer ID from the first order node
+  const shopifyCustomerId = orders[0]?.node?.customer?.id || null;
+
+  if (!customer || orders.length === 0) {
     return res.status(200).json({
       orderCount: 0,
       farmsSupported: 0,
@@ -55,10 +64,10 @@ export default async function handler(req, res) {
       carbonSequestered: 0,
       carbonFootprintAvoided: 0,
       waterSaved: 0,
+      shopifyCustomerId
     });
   }
 
-  const orders = customer.orders.edges;
   const orderCount = orders.length;
 
   let small = 0, standard = 0, full = 0;
@@ -86,6 +95,7 @@ export default async function handler(req, res) {
     fertilizersAvoided,
     carbonSequestered,
     carbonFootprintAvoided,
-    waterSaved
+    waterSaved,
+    shopifyCustomerId // ✅ Now returned
   });
 }
