@@ -48,6 +48,7 @@ export default async function handler(req, res) {
   const data = await response.json();
   const customer = data.data?.customer;
   const shopifyCustomerId = customer?.id;
+  console.log("📦 Shopify Raw Response:", JSON.stringify(data, null, 2));
 
 
   if (!customer) {
