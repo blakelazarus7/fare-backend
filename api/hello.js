@@ -23,10 +23,8 @@ export default async function handler(req, res) {
     body: JSON.stringify({
       query: `
         {
-          {
-  customer(customerAccessToken: "${token}") {
-    id
-    orders(first: 100) {
+          customer(customerAccessToken: "${token}") {
+            orders(first: 100) {
               edges {
                 node {
                   lineItems(first: 5) {
@@ -35,6 +33,9 @@ export default async function handler(req, res) {
                         title
                       }
                     }
+                  }
+                  customer {
+                    id
                   }
                 }
               }
@@ -46,12 +47,15 @@ export default async function handler(req, res) {
   });
 
   const data = await response.json();
-  const customer = data.data?.customer;
-  const shopifyCustomerId = customer?.id;
   console.log("📦 Shopify Raw Response:", JSON.stringify(data, null, 2));
 
+  const customer = data.data?.customer;
+  const orders = customer?.orders?.edges || [];
 
-  if (!customer) {
+  // Extract Shopify customer ID from the first order node
+  const shopifyCustomerId = orders[0]?.node?.customer?.id || null;
+
+  if (!customer || orders.length === 0) {
     return res.status(200).json({
       orderCount: 0,
       farmsSupported: 0,
@@ -64,7 +68,6 @@ export default async function handler(req, res) {
     });
   }
 
-  const orders = customer.orders.edges;
   const orderCount = orders.length;
 
   let small = 0, standard = 0, full = 0;
@@ -92,6 +95,7 @@ export default async function handler(req, res) {
     fertilizersAvoided,
     carbonSequestered,
     carbonFootprintAvoided,
-    waterSaved
+    waterSaved,
+    shopifyCustomerId // ✅ Now returned
   });
 }
