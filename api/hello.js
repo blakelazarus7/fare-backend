@@ -1,12 +1,13 @@
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-  const url = new URL(req.url || "", `http://${req.headers.host}`);
+  const url = new URL(req.url || "", http://${req.headers.host});
   const token = url.searchParams.get("token");
 
   if (!token) {
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
       "X-Shopify-Storefront-Access-Token": "8b1f2fc60905539067a137028435c86a",
     },
     body: JSON.stringify({
-      query: `
+      query: 
         {
           customer(customerAccessToken: "${token}") {
             orders(first: 100) {
@@ -38,15 +39,14 @@ export default async function handler(req, res) {
             }
           }
         }
-      `
+      
     })
   });
 
   const data = await response.json();
   const customer = data.data?.customer;
-  const orders = customer?.orders?.edges || [];
 
-  if (!customer || orders.length === 0) {
+  if (!customer) {
     return res.status(200).json({
       orderCount: 0,
       farmsSupported: 0,
@@ -58,7 +58,9 @@ export default async function handler(req, res) {
     });
   }
 
+  const orders = customer.orders.edges;
   const orderCount = orders.length;
+
   let small = 0, standard = 0, full = 0;
 
   for (let order of orders) {
