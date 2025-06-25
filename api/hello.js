@@ -22,27 +22,30 @@ export default async function handler(req, res) {
       "X-Shopify-Storefront-Access-Token": "8b1f2fc60905539067a137028435c86a",
     },
     body: JSON.stringify({
-      query: `
-        {
-          customer(customerAccessToken: "${token}") {
-            orders(first: 100) {
-              edges {
-                node {
-                  lineItems(first: 5) {
-                    edges {
-                      node {
-                        title
-                      }
-                    }
+  query: `
+    {
+      customer(customerAccessToken: "${token}") {
+        id
+        email
+        firstName
+        lastName
+        orders(first: 100) {
+          edges {
+            node {
+              lineItems(first: 5) {
+                edges {
+                  node {
+                    title
                   }
                 }
               }
             }
           }
         }
-      `
-    })
-  });
+      }
+    }
+  `
+})
 
   const data = await shopifyRes.json();
   const customer = data.data?.customer;
