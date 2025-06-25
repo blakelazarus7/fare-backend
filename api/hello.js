@@ -3,9 +3,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   const url = new URL(req.url || "", `http://${req.headers.host}`);
   const token = url.searchParams.get("token");
@@ -44,8 +42,8 @@ export default async function handler(req, res) {
     })
   });
 
-  const data = await response.json();
-  const customer = data.data?.customer;
+  const result = await response.json();
+  const customer = result?.data?.customer;
 
   if (!customer) {
     return res.status(200).json({
@@ -61,8 +59,6 @@ export default async function handler(req, res) {
   }
 
   const orders = customer.orders.edges;
-  const orderCount = orders.length;
-
   let small = 0, standard = 0, full = 0;
 
   for (let order of orders) {
@@ -74,6 +70,7 @@ export default async function handler(req, res) {
     }
   }
 
+  const orderCount = small + standard + full;
   const farmsSupported = Math.min((small * 6) + (standard * 8) + (full * 10), 30);
   const pesticidesAvoided = (small * 2) + (standard * 4) + (full * 7);
   const fertilizersAvoided = (small * 21) + (standard * 30) + (full * 42);
