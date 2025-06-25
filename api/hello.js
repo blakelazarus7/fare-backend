@@ -1,3 +1,4 @@
+Correct hello.js file
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -16,16 +17,12 @@ export default async function handler(req, res) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": process.env.SHOPIFY_ADMIN_TOKEN,
+      "X-Shopify-Storefront-Access-Token": "8b1f2fc60905539067a137028435c86a",
     },
     body: JSON.stringify({
       query: `
         {
           customer(customerAccessToken: "${token}") {
-            id
-            email
-            firstName
-            lastName
             orders(first: 100) {
               edges {
                 node {
@@ -47,8 +44,9 @@ export default async function handler(req, res) {
 
   const data = await response.json();
   const customer = data.data?.customer;
+  const orders = customer?.orders?.edges || [];
 
-  if (!customer) {
+  if (!customer || orders.length === 0) {
     return res.status(200).json({
       orderCount: 0,
       farmsSupported: 0,
@@ -57,14 +55,12 @@ export default async function handler(req, res) {
       carbonSequestered: 0,
       carbonFootprintAvoided: 0,
       waterSaved: 0,
-      shopifyCustomerId: null
     });
   }
 
-  const orders = customer.orders.edges;
   const orderCount = orders.length;
-
   let small = 0, standard = 0, full = 0;
+
   for (let order of orders) {
     const titles = order.node.lineItems.edges.map(e => e.node.title.toLowerCase());
     for (let title of titles) {
@@ -88,7 +84,6 @@ export default async function handler(req, res) {
     fertilizersAvoided,
     carbonSequestered,
     carbonFootprintAvoided,
-    waterSaved,
-    shopifyCustomerId: customer.id
+    waterSaved
   });
 }
