@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const url = new URL(req.url || "", http://${req.headers.host});
+  const url = new URL(req.url || "", `http://${req.headers.host}`);
   const token = url.searchParams.get("token");
 
   if (!token) {
@@ -21,9 +21,10 @@ export default async function handler(req, res) {
       "X-Shopify-Storefront-Access-Token": "8b1f2fc60905539067a137028435c86a",
     },
     body: JSON.stringify({
-      query: 
+      query: `
         {
           customer(customerAccessToken: "${token}") {
+            id
             orders(first: 100) {
               edges {
                 node {
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
             }
           }
         }
-      
+      `
     })
   });
 
@@ -55,6 +56,7 @@ export default async function handler(req, res) {
       carbonSequestered: 0,
       carbonFootprintAvoided: 0,
       waterSaved: 0,
+      customerId: null
     });
   }
 
@@ -86,6 +88,7 @@ export default async function handler(req, res) {
     fertilizersAvoided,
     carbonSequestered,
     carbonFootprintAvoided,
-    waterSaved
+    waterSaved,
+    customerId: customer.id
   });
 }
