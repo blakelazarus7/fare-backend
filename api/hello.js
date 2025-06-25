@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const url = new URL(req.url || '', http://${req.headers.host});
+  const url = new URL(req.url || '', `http://${req.headers.host}`);
   const token = url.searchParams.get("token");
 
   console.log("🔑 Customer Access Token:", token);
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       "X-Shopify-Storefront-Access-Token": "8b1f2fc60905539067a137028435c86a",
     },
     body: JSON.stringify({
-      query: 
+      query: `
         {
           customer(customerAccessToken: "${token}") {
             orders(first: 100) {
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
             }
           }
         }
-      
+      `
     })
   });
 
@@ -87,4 +87,4 @@ export default async function handler(req, res) {
     carbonFootprintAvoided,
     waterSaved
   });
-} 
+}
