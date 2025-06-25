@@ -1,20 +1,20 @@
-module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-  const url = new URL(req.url || '', `http://${req.headers.host}`);
+  const url = new URL(req.url || "", `http://${req.headers.host}`);
   const token = url.searchParams.get("token");
-
-  console.log("🔑 Customer Access Token:", token);
 
   if (!token) {
     return res.status(400).json({ error: "Missing token" });
   }
 
-  const shopifyRes = await fetch("https://tuqhcs-7a.myshopify.com/api/2024-01/graphql.json", {
+  const response = await fetch("https://tuqhcs-7a.myshopify.com/api/2024-01/graphql.json", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -24,10 +24,6 @@ module.exports = async function handler(req, res) {
       query: `
         {
           customer(customerAccessToken: "${token}") {
-            id
-            email
-            firstName
-            lastName
             orders(first: 100) {
               edges {
                 node {
@@ -47,7 +43,7 @@ module.exports = async function handler(req, res) {
     })
   });
 
-  const data = await shopifyRes.json();
+  const data = await response.json();
   const customer = data.data?.customer;
 
   if (!customer) {
@@ -63,6 +59,8 @@ module.exports = async function handler(req, res) {
   }
 
   const orders = customer.orders.edges;
+  const orderCount = orders.length;
+
   let small = 0, standard = 0, full = 0;
 
   for (let order of orders) {
@@ -74,7 +72,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  const orderCount = small + standard + full;
   const farmsSupported = Math.min((small * 6) + (standard * 8) + (full * 10), 30);
   const pesticidesAvoided = (small * 2) + (standard * 4) + (full * 7);
   const fertilizersAvoided = (small * 21) + (standard * 30) + (full * 42);
@@ -91,4 +88,4 @@ module.exports = async function handler(req, res) {
     carbonFootprintAvoided,
     waterSaved
   });
-};
+}
