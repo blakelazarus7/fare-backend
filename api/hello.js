@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         }
       `
     })
-  }); // ✅ <-- THIS was missing!
+  });
 
   const data = await shopifyRes.json();
   const customer = data.data?.customer;
@@ -91,4 +91,4 @@ export default async function handler(req, res) {
     carbonFootprintAvoided,
     waterSaved
   });
-}
+};
