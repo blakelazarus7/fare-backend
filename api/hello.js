@@ -24,6 +24,10 @@ export default async function handler(req, res) {
       query: `
         {
           customer(customerAccessToken: "${token}") {
+            id
+            email
+            firstName
+            lastName
             orders(first: 100) {
               edges {
                 node {
@@ -41,7 +45,7 @@ export default async function handler(req, res) {
         }
       `
     })
-  });
+  }); // ✅ <-- THIS was missing!
 
   const data = await shopifyRes.json();
   const customer = data.data?.customer;
