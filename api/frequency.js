@@ -1,12 +1,12 @@
 export default async function handler(req, res) {
-  const { customerId } = req.query;
+  const { shopifyCustomerId } = req.query;
 
-  if (!customerId) {
-    return res.status(400).json({ error: 'Missing customerId' });
+  if (!shopifyCustomerId) {
+    return res.status(400).json({ error: 'Missing shopifyCustomerId' });
   }
 
   try {
-    const response = await fetch(`https://api.smartrr.com/v1/subscriptions?customer_id=${customerId}`, {
+    const response = await fetch(`https://api.smartrr.com/subscriptions?shopify_customer_id=${shopifyCustomerId}`, {
       method: 'GET',
       headers: {
         'Authorization': 'Bearer sUjadTdsAjFwwAcaEXASXXcAjssSgXX0aUJ0',
