@@ -7,52 +7,40 @@ export default async function handler(req, res) {
 
   const smartrrAccessToken = 'sUjadTdsAjFwwAcaEXASXXcAjssSgXX0aUJ0';
 
+  // Map of SellingPlan IDs to readable names
+  const sellingPlanMap = {
+    "gid://shopify/SellingPlan/691978240366": "Small Seasonal Box - Weekly",
+    "gid://shopify/SellingPlan/691978273134": "Small Seasonal Box - Every Two Weeks",
+    "gid://shopify/SellingPlan/691978305902": "Small Seasonal Box - Monthly",
+    "gid://shopify/SellingPlan/691978338670": "Standard Seasonal Box - Weekly",
+    "gid://shopify/SellingPlan/691978371438": "Standard Seasonal Box - Every Two Weeks",
+    "gid://shopify/SellingPlan/691978404206": "Standard Seasonal Box - Monthly",
+    "gid://shopify/SellingPlan/691978436974": "Full Seasonal Box - Weekly",
+    "gid://shopify/SellingPlan/691978469742": "Full Seasonal Box - Every Two Weeks",
+    "gid://shopify/SellingPlan/691978502510": "Full Seasonal Box - Monthly"
+  };
+
   try {
-    // Step 1: Get subscriptions for customer
     const subRes = await fetch(`https://api.smartrr.com/subscriptions?shopify_customer_id=${shopifyCustomerId}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${smartrrAccessToken}`,
-        'Content-Type': 'application/json',
-      },
+        'Content-Type': 'application/json'
+      }
     });
 
-    const subs = await subRes.json();
+    const data = await subRes.json();
+    const subscriptions = data?.data || [];
 
-    if (!subRes.ok || !subs[0]) {
-      return res.status(404).json({ error: 'No subscriptions found' });
+    if (subscriptions.length === 0) {
+      return res.status(404).json({ error: 'No active subscriptions found' });
     }
 
-    const shopifySubscriptionId = subs[0].shopifySubscriptionId || subs[0].id;
+    const sellingPlanId = subscriptions[0]?.sellingPlanId;
+    const readablePlan = sellingPlanMap[sellingPlanId] || "Unknown Plan";
 
-    // Step 2: Get purchase state to access selling plan
-    const planRes = await fetch(`https://api.smartrr.com/vendor/purchase-state/${shopifySubscriptionId}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${smartrrAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const planData = await planRes.json();
-
-    if (!planRes.ok || !planData.sellingPlanId) {
-      return res.status(404).json({ error: 'No sellingPlanId found' });
-    }
-
-    const sellingPlanId = planData.sellingPlanId;
-
-    // Step 3: Map to readable plan name
-    const planMap = {
-      'gid://shopify/SellingPlan/691978305902': 'Weekly Box',
-      'gid://shopify/SellingPlan/691978305915': 'Every 2 Weeks',
-      'gid://shopify/SellingPlan/691978305928': 'Monthly Box',
-    };
-
-    const planName = planMap[sellingPlanId] || 'Unknown Plan';
-
-    res.status(200).json({ planName, sellingPlanId });
+    return res.status(200).json({ plan: readablePlan });
   } catch (err) {
-    res.status(500).json({ error: 'Internal Server Error', detail: err.message });
+    return res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 }
