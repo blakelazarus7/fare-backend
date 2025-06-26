@@ -71,7 +71,7 @@ export default async function handler(req, res) {
   }
 
   const orderCount = small + standard + full;
-  const farmsSupported = Math.min((small * 6) + (standard * 8) + (full * 10), 30);
+  const farmsSupported = Math.min((small * 5) + (standard * 7) + (full * 8), 30);
   const pesticidesAvoided = (small * 2) + (standard * 4) + (full * 7);
   const fertilizersAvoided = (small * 21) + (standard * 30) + (full * 42);
   const carbonSequestered = (small * 2.5) + (standard * 3.0) + (full * 3.8);
