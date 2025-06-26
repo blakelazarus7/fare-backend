@@ -19,7 +19,8 @@ export default async function handler(req, res) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": "sUjadTdsAjFwwAcaEXASXXcAjssSgXX0aUJ0" // ✅ double-check this key
+        "x-api-key": "XJcaggUFA0UuTAcwEsAdSJEAdgXJ0sjdwgTE"
+ // ✅ double-check this key
       }
     });
 
