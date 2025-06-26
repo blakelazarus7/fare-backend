@@ -7,7 +7,6 @@ export default async function handler(req, res) {
 
   const smartrrAccessToken = 'sUjadTdsAjFwwAcaEXASXXcAjssSgXX0aUJ0';
 
-  // Map of SellingPlan IDs to readable names
   const sellingPlanMap = {
     "gid://shopify/SellingPlan/691978240366": "Small Seasonal Box - Weekly",
     "gid://shopify/SellingPlan/691978273134": "Small Seasonal Box - Every Two Weeks",
@@ -25,22 +24,36 @@ export default async function handler(req, res) {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${smartrrAccessToken}`,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
     });
 
-    const data = await subRes.json();
-    const subscriptions = data?.data || [];
-
-    if (subscriptions.length === 0) {
-      return res.status(404).json({ error: 'No active subscriptions found' });
+    if (!subRes.ok) {
+      const errorText = await subRes.text();
+      return res.status(subRes.status).json({
+        error: 'Failed to fetch from Smartrr',
+        detail: errorText,
+      });
     }
 
-    const sellingPlanId = subscriptions[0]?.sellingPlanId;
+    const subData = await subRes.json();
+
+    // Assume first subscription is the one we care about
+    const subscription = subData[0];
+    const sellingPlanId = subscription?.selling_plan_id || subscription?.sellingPlanId;
+
     const readablePlan = sellingPlanMap[sellingPlanId] || "Unknown Plan";
 
-    return res.status(200).json({ plan: readablePlan });
+    return res.status(200).json({
+      sellingPlanId,
+      planName: readablePlan,
+    });
+
   } catch (err) {
-    return res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      detail: err.message || err.toString(),
+    });
   }
 }
