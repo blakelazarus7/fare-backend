@@ -13,20 +13,31 @@ export default async function handler(req, res) {
   }
 
   try {
-    const id = customerId.split("/").pop(); // Strip Shopify GID to numeric ID
+    const id = customerId.split("/").pop();
 
     const smartrrResponse = await fetch(`https://api.smartrr.com/customers/shopify/${id}/subscriptions`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": "sUjadTdsAjFwwAcaEXASXXcAjssSgXX0aUJ0"
+        "x-api-key": "sUjadTdsAjFwwAcaEXASXXcAjssSgXX0aUJ0" // ✅ double-check this key
       }
     });
 
-    const data = await smartrrResponse.json();
+    const text = await smartrrResponse.text();
+    console.log("📦 Smartrr raw response:", text);
+
+    if (smartrrResponse.status !== 200) {
+      return res.status(smartrrResponse.status).json({
+        error: "Smartrr API returned non-200",
+        status: smartrrResponse.status,
+        body: text
+      });
+    }
+
+    const data = JSON.parse(text);
 
     if (!Array.isArray(data) || data.length === 0) {
-      return res.status(200).json({ message: "No subscriptions found.", frequency: null });
+      return res.status(200).json({ message: "No subscriptions found", frequency: null });
     }
 
     const subscription = data[0];
@@ -36,9 +47,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ boxSize, frequency });
 
   } catch (err) {
-  console.error("Smartrr API error:", err.message || err);
-    console.log("📦 Smartrr response status:", smartrrResponse.status);
-console.log("📦 Smartrr response body:", await smartrrResponse.text());
-  return res.status(500).json({ error: "Failed to fetch subscription from Smartrr", detail: err.message });
-}
+    console.error("❌ Smartrr API error:", err);
+    return res.status(500).json({ error: "Failed to fetch subscription from Smartrr", detail: err.message });
+  }
 }
