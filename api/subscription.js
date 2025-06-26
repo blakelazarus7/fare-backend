@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": "juTaTgaEAajJdAcTg0ASwUUAjTJwTX00TFju" // your new key
+        "x-smartrr-access-token": "juTaTgaEAajJdAcTg0ASwUUAjTJwTX00TFju" // ← USE THIS HEADER NAME
       }
     });
 
