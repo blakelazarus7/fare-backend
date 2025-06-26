@@ -37,6 +37,8 @@ export default async function handler(req, res) {
 
   } catch (err) {
   console.error("Smartrr API error:", err.message || err);
+    console.log("📦 Smartrr response status:", smartrrResponse.status);
+console.log("📦 Smartrr response body:", await smartrrResponse.text());
   return res.status(500).json({ error: "Failed to fetch subscription from Smartrr", detail: err.message });
 }
 }
