@@ -1,48 +1,44 @@
 export default async function handler(req, res) {
-  const rechargeToken = 'sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c';
+  const email = req.query.email;
 
-  const customerEmail = req.query.email;
-
-  if (!customerEmail) {
-    return res.status(400).json({ error: 'Missing email parameter' });
+  if (!email) {
+    return res.status(400).json({ error: "Missing email" });
   }
 
+  const rechargeToken = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
+
   try {
-    // Step 1: Get Recharge Customer by Email
-    const customerRes = await fetch(`https://api.rechargeapps.com/customers?email=${customerEmail}`, {
+    const response = await fetch(`https://api.rechargeapps.com/customers?email=${email}`, {
       headers: {
-        'X-Recharge-Access-Token': rechargeToken,
-        'Accept': 'application/json',
-      },
+        "X-Recharge-Access-Token": rechargeToken
+      }
     });
 
-    const customerData = await customerRes.json();
-    const customer = customerData.customers[0];
+    const data = await response.json();
 
-    if (!customer) {
-      return res.status(404).json({ error: 'Customer not found in Recharge' });
+    if (!data.customers || data.customers.length === 0) {
+      return res.status(404).json({ error: "Customer not found" });
     }
 
-    // Step 2: Get Subscriptions for that Customer
-    const subsRes = await fetch(`https://api.rechargeapps.com/subscriptions?customer_id=${customer.id}`, {
+    const customerId = data.customers[0].id;
+
+    const subsResponse = await fetch(`https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`, {
       headers: {
-        'X-Recharge-Access-Token': rechargeToken,
-        'Accept': 'application/json',
-      },
+        "X-Recharge-Access-Token": rechargeToken
+      }
     });
 
-    const subsData = await subsRes.json();
-    const subscriptions = subsData.subscriptions;
+    const subsData = await subsResponse.json();
 
-    // Get just the frequency (interval + unit)
-    const plans = subscriptions.map(sub => ({
-      product_title: sub.product_title,
-      frequency: `${sub.order_interval_frequency} ${sub.order_interval_unit}`,
-    }));
+    if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
+      return res.status(404).json({ error: "No active subscription found" });
+    }
 
-    res.status(200).json({ plans });
-  } catch (error) {
-    console.error('Recharge API error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    const plan = subsData.subscriptions[0].order_interval_unit;
+
+    return res.status(200).json({ plan });
+  } catch (err) {
+    console.error("Recharge fetch failed", err);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }
