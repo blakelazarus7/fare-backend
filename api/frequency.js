@@ -1,77 +1,32 @@
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  const { token } = req.body;
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (!token) {
-    return res.status(400).json({ error: "Missing token" });
-  }
+  const { email } = req.method === 'POST' ? req.body : req.query;
+  if (!email) return res.status(400).json({ error: 'Missing customer email' });
 
-  const shopifyDomain = "tuqhcs-7a.myshopify.com"; // Replace with your actual store
-  const storefrontAccessToken = "8b1f2fc60905539067a137028435c86a"; // Your Storefront API access token
-  const rechargeToken = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
+  const token = 'sUjadTdsAjFwwAcaEXASXXcAjssSgXX0aUJ0';
+  const url = `https://api.smartrr.com/vendor/customer?filterEquals[email]=${encodeURIComponent(email)}`;
 
   try {
-    // Step 1: Get customer email using Shopify Storefront API
-    const shopifyRes = await fetch(`https://${shopifyDomain}/api/2024-04/graphql.json`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": storefrontAccessToken
-      },
-      body: JSON.stringify({
-        query: `
-          {
-            customer(customerAccessToken: "${token}") {
-              email
-            }
-          }
-        `
-      })
+    const resp = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
     });
+    if (!resp.ok) return res.status(resp.status).json({ error: 'Failed to fetch Smartrr customer' });
 
-    const shopifyData = await shopifyRes.json();
-    const email = shopifyData?.data?.customer?.email;
+    const json = await resp.json();
+    if (!json.data?.[0]) return res.status(404).json({ error: 'Customer not found' });
 
-    if (!email) {
-      return res.status(404).json({ error: "Could not find customer email." });
-    }
+    const customer = json.data[0];
+    const sub = customer.subscriptions?.[0];
+    if (!sub) return res.status(404).json({ error: 'No subscriptions found' });
 
-    // Step 2: Get Recharge customer ID
-    const rechargeRes = await fetch(`https://api.rechargeapps.com/customers?email=${email}`, {
-      headers: {
-        "X-Recharge-Access-Token": rechargeToken
-      }
-    });
-
-    const rechargeData = await rechargeRes.json();
-
-    if (!rechargeData.customers || rechargeData.customers.length === 0) {
-      return res.status(404).json({ error: "Recharge customer not found" });
-    }
-
-    const customerId = rechargeData.customers[0].id;
-
-    // Step 3: Get subscription plan
-    const subRes = await fetch(`https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`, {
-      headers: {
-        "X-Recharge-Access-Token": rechargeToken
-      }
-    });
-
-    const subData = await subRes.json();
-
-    if (!subData.subscriptions || subData.subscriptions.length === 0) {
-      return res.status(404).json({ error: "No active subscription found." });
-    }
-
-    const plan = subData.subscriptions[0].order_interval_unit;
-
-    return res.status(200).json({ plan });
-  } catch (err) {
-    console.error("Failed to get plan:", err);
-    return res.status(500).json({ error: "Internal Server Error" });
+    const planName = sub.sellingPlanName || sub.planName || 'Unknown';
+    return res.status(200).json({ plan: planName });
+  } catch (e) {
+    return res.status(500).json({ error: 'Internal error', detail: e.message });
   }
 }
