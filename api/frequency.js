@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Missing token" });
   }
 
-  const shopifyDomain = "faregrocery.myshopify.com"; // Replace with your actual store
+  const shopifyDomain = "tuqhcs-7a.myshopify.com"; // Replace with your actual store
   const storefrontAccessToken = "c8df2eb7ec9b1a14d7062269f0276a74"; // Your Storefront API access token
   const rechargeToken = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
 
