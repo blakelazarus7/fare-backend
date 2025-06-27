@@ -1,15 +1,6 @@
-export default async function handler(req, res) {
-  // ✅ CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+import allowCors from './middleware';
 
-  // ✅ Handle preflight request
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
-
+async function handler(req, res) {
   const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
   const customerEmail = req.query.email;
 
@@ -48,9 +39,11 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "No active subscriptions found" });
     }
 
-    const subscription = subsData.subscriptions[0]; // assuming 1 sub
+    const subscription = subsData.subscriptions[0];
     const frequency = subscription.order_interval_unit === "day"
-      ? (subscription.order_interval_frequency === 7 ? "weekly" : subscription.order_interval_frequency === 14 ? "biweekly" : `${subscription.order_interval_frequency} days`)
+      ? (subscription.order_interval_frequency === 7 ? "weekly" :
+         subscription.order_interval_frequency === 14 ? "biweekly" :
+         `${subscription.order_interval_frequency} days`)
       : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
     return res.status(200).json({
@@ -63,3 +56,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Server error retrieving plan" });
   }
 }
+
+export default allowCors(handler);
