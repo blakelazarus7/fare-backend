@@ -5,20 +5,19 @@ export default async function handler(req, res) {
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
-
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Content-Type", "application/javascript"); // <- IMPORTANT
 
   if (req.method === "OPTIONS") {
-    return res.status(204).end(); // Preflight success
+    return res.status(204).end();
   }
 
   const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
   const customerEmail = req.query.email;
 
   if (!customerEmail) {
-    return res.status(400).json({ error: "Email parameter is required" });
+    return res.status(200).send(`window.renderPlan({ error: "Missing email" });`);
   }
 
   try {
@@ -32,7 +31,7 @@ export default async function handler(req, res) {
     const customerData = await customerResp.json();
 
     if (!customerData.customers || customerData.customers.length === 0) {
-      return res.status(404).json({ error: "Customer not found" });
+      return res.status(200).send(`window.renderPlan({ error: "Customer not found" });`);
     }
 
     const customerId = customerData.customers[0].id;
@@ -47,23 +46,22 @@ export default async function handler(req, res) {
     const subsData = await subsResp.json();
 
     if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
-      return res.status(404).json({ error: "No active subscriptions found" });
+      return res.status(200).send(`window.renderPlan({ error: "No active subscriptions" });`);
     }
 
     const subscription = subsData.subscriptions[0];
     const frequency = subscription.order_interval_unit === "day"
-      ? (subscription.order_interval_frequency === 7 ? "weekly"
-        : subscription.order_interval_frequency === 14 ? "biweekly"
+      ? (subscription.order_interval_frequency === 7 ? "1 week"
+        : subscription.order_interval_frequency === 14 ? "2 weeks"
         : `${subscription.order_interval_frequency} days`)
       : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
-    return res.status(200).json({
-      plan: frequency,
-      product_title: subscription.product_title
-    });
-
+    return res.status(200).send(`window.renderPlan({
+      plan: ${JSON.stringify(frequency)},
+      product_title: ${JSON.stringify(subscription.product_title)}
+    });`);
   } catch (err) {
-    console.error("Server error:", err);
-    return res.status(500).json({ error: "Server error retrieving plan" });
+    console.error("❌ API ERROR", err);
+    return res.status(200).send(`window.renderPlan({ error: "Server error" });`);
   }
 }
