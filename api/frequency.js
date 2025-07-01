@@ -1,10 +1,9 @@
 export default async function handler(req, res) {
-  // ✅ CORS Headers
+  // ✅ Set proper CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // ✅ Handle preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -25,7 +24,6 @@ export default async function handler(req, res) {
     });
 
     const customerData = await customerResp.json();
-
     if (!customerData.customers || customerData.customers.length === 0) {
       return res.status(404).json({ error: "Customer not found" });
     }
@@ -40,9 +38,8 @@ export default async function handler(req, res) {
     });
 
     const subsData = await subsResp.json();
-
     if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
-      return res.status(404).json({ error: "No active subscriptions found" });
+      return res.status(404).json({ error: "No subscriptions found" });
     }
 
     const subscription = subsData.subscriptions[0];
@@ -60,8 +57,8 @@ export default async function handler(req, res) {
       product_title: subscription.product_title
     });
 
-  } catch (error) {
-    console.error("Recharge API error:", error);
+  } catch (err) {
+    console.error("Recharge fetch error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
