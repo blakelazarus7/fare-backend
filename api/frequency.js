@@ -1,11 +1,17 @@
 export default async function handler(req, res) {
-  // ✅ Fix CORS for mobile + web
-  res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  const allowedOrigins = ["https://www.eatfare.com", "https://eatfare.com"];
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Content-Type", "application/json");
 
   if (req.method === "OPTIONS") {
-    return res.status(200).end(); // CORS preflight
+    return res.status(204).end(); // Preflight success
   }
 
   const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
@@ -45,7 +51,6 @@ export default async function handler(req, res) {
     }
 
     const subscription = subsData.subscriptions[0];
-
     const frequency = subscription.order_interval_unit === "day"
       ? (subscription.order_interval_frequency === 7 ? "weekly"
         : subscription.order_interval_frequency === 14 ? "biweekly"
@@ -56,6 +61,7 @@ export default async function handler(req, res) {
       plan: frequency,
       product_title: subscription.product_title
     });
+
   } catch (err) {
     console.error("Server error:", err);
     return res.status(500).json({ error: "Server error retrieving plan" });
