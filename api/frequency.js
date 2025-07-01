@@ -1,9 +1,9 @@
 export default async function handler(req, res) {
-  // ✅ Set proper CORS headers
- res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
-res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-res.setHeader("Vary", "Origin");
+  // ✅ Always set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Vary", "Origin");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -13,7 +13,8 @@ res.setHeader("Vary", "Origin");
   const customerEmail = req.query.email;
 
   if (!customerEmail) {
-    return res.status(400).json({ error: "Email parameter is required" });
+    res.status(400).json({ error: "Email parameter is required" });
+    return;
   }
 
   try {
@@ -26,7 +27,8 @@ res.setHeader("Vary", "Origin");
 
     const customerData = await customerResp.json();
     if (!customerData.customers || customerData.customers.length === 0) {
-      return res.status(404).json({ error: "Customer not found" });
+      res.status(404).json({ error: "Customer not found" });
+      return;
     }
 
     const customerId = customerData.customers[0].id;
@@ -40,7 +42,8 @@ res.setHeader("Vary", "Origin");
 
     const subsData = await subsResp.json();
     if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
-      return res.status(404).json({ error: "No subscriptions found" });
+      res.status(404).json({ error: "No subscriptions found" });
+      return;
     }
 
     const subscription = subsData.subscriptions[0];
@@ -53,13 +56,13 @@ res.setHeader("Vary", "Origin");
           : `${subscription.order_interval_frequency} days`
         : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
-    return res.status(200).json({
+    res.status(200).json({
       plan: frequency,
       product_title: subscription.product_title
     });
 
   } catch (err) {
     console.error("Recharge fetch error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 }
