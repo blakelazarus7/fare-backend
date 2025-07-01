@@ -1,6 +1,7 @@
 export default async function handler(req, res) {
+  // ✅ Fix CORS for mobile + web
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const customerResp = await fetch(https://api.rechargeapps.com/customers?email=${encodeURIComponent(customerEmail)}, {
+    const customerResp = await fetch(`https://api.rechargeapps.com/customers?email=${encodeURIComponent(customerEmail)}`, {
       headers: {
         "X-Recharge-Access-Token": RECHARGE_API_KEY,
         "Accept": "application/json"
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
 
     const customerId = customerData.customers[0].id;
 
-    const subsResp = await fetch(https://api.rechargeapps.com/subscriptions?customer_id=${customerId}, {
+    const subsResp = await fetch(`https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`, {
       headers: {
         "X-Recharge-Access-Token": RECHARGE_API_KEY,
         "Accept": "application/json"
@@ -44,18 +45,19 @@ export default async function handler(req, res) {
     }
 
     const subscription = subsData.subscriptions[0];
+
     const frequency = subscription.order_interval_unit === "day"
       ? (subscription.order_interval_frequency === 7 ? "weekly"
-      : subscription.order_interval_frequency === 14 ? "biweekly"
-      : ${subscription.order_interval_frequency} days)
-      : ${subscription.order_interval_frequency} ${subscription.order_interval_unit};
+        : subscription.order_interval_frequency === 14 ? "biweekly"
+        : `${subscription.order_interval_frequency} days`)
+      : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
     return res.status(200).json({
       plan: frequency,
       product_title: subscription.product_title
     });
   } catch (err) {
-    console.error(err);
+    console.error("Server error:", err);
     return res.status(500).json({ error: "Server error retrieving plan" });
   }
 }
