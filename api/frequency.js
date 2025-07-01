@@ -5,9 +5,10 @@ export default async function handler(req, res) {
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Content-Type", "application/javascript"); // <- IMPORTANT
+  res.setHeader("Content-Type", "application/javascript"); // critical for <script src>
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
@@ -46,7 +47,7 @@ export default async function handler(req, res) {
     const subsData = await subsResp.json();
 
     if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
-      return res.status(200).send(`window.renderPlan({ error: "No active subscriptions" });`);
+      return res.status(200).send(`window.renderPlan({ error: "No subscriptions" });`);
     }
 
     const subscription = subsData.subscriptions[0];
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
       product_title: ${JSON.stringify(subscription.product_title)}
     });`);
   } catch (err) {
-    console.error("❌ API ERROR", err);
+    console.error("❌ Backend error:", err);
     return res.status(200).send(`window.renderPlan({ error: "Server error" });`);
   }
 }
