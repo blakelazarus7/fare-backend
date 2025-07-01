@@ -1,15 +1,15 @@
 export default async function handler(req, res) {
-  // CORS HEADERS — must be at top
+  // ✅ CORS Headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight
+  // ✅ Handle preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
+  const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862eb1cb36afeb234d792ea170cd8f869a999eb8322bb81c";
   const customerEmail = req.query.email;
 
   if (!customerEmail) {
@@ -49,9 +49,9 @@ export default async function handler(req, res) {
     const frequency =
       subscription.order_interval_unit === "day"
         ? subscription.order_interval_frequency === 7
-          ? "weekly"
+          ? "1 week"
           : subscription.order_interval_frequency === 14
-          ? "biweekly"
+          ? "2 week"
           : `${subscription.order_interval_frequency} days`
         : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
@@ -60,8 +60,8 @@ export default async function handler(req, res) {
       product_title: subscription.product_title
     });
 
-  } catch (err) {
-    console.error("API error:", err);
-    return res.status(500).json({ error: "Server error retrieving plan" });
+  } catch (error) {
+    console.error("Recharge API error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
