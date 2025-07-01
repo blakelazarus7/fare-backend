@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // ✅ Always set CORS headers
+  // Always set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -13,8 +13,8 @@ export default async function handler(req, res) {
   const customerEmail = req.query.email;
 
   if (!customerEmail) {
-    res.status(400).json({ error: "Email parameter is required" });
-    return;
+    res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
+    return res.status(400).json({ error: "Email parameter is required" });
   }
 
   try {
@@ -27,8 +27,8 @@ export default async function handler(req, res) {
 
     const customerData = await customerResp.json();
     if (!customerData.customers || customerData.customers.length === 0) {
-      res.status(404).json({ error: "Customer not found" });
-      return;
+      res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
+      return res.status(404).json({ error: "Customer not found" });
     }
 
     const customerId = customerData.customers[0].id;
@@ -42,8 +42,8 @@ export default async function handler(req, res) {
 
     const subsData = await subsResp.json();
     if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
-      res.status(404).json({ error: "No subscriptions found" });
-      return;
+      res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
+      return res.status(404).json({ error: "No subscriptions found" });
     }
 
     const subscription = subsData.subscriptions[0];
@@ -56,13 +56,15 @@ export default async function handler(req, res) {
           : `${subscription.order_interval_frequency} days`
         : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
-    res.status(200).json({
+    res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
+    return res.status(200).json({
       plan: frequency,
       product_title: subscription.product_title
     });
 
   } catch (err) {
     console.error("Recharge fetch error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
