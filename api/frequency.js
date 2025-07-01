@@ -1,24 +1,20 @@
 export default async function handler(req, res) {
-  const allowedOrigins = ["https://www.eatfare.com", "https://eatfare.com"];
-  const origin = req.headers.origin;
+  const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
 
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-
+  // Allow all origins for script injection or fetch fallback
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Content-Type", "application/javascript"); // critical for <script src>
 
+  // Handle preflight
   if (req.method === "OPTIONS") {
-    return res.status(204).end();
+    return res.status(200).end();
   }
 
-  const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
   const customerEmail = req.query.email;
-
   if (!customerEmail) {
-    return res.status(200).send(`window.renderPlan({ error: "Missing email" });`);
+    res.setHeader("Content-Type", "application/javascript");
+    return res.status(400).send(`window.renderPlan({ error: "Missing email parameter" });`);
   }
 
   try {
@@ -32,7 +28,8 @@ export default async function handler(req, res) {
     const customerData = await customerResp.json();
 
     if (!customerData.customers || customerData.customers.length === 0) {
-      return res.status(200).send(`window.renderPlan({ error: "Customer not found" });`);
+      res.setHeader("Content-Type", "application/javascript");
+      return res.status(404).send(`window.renderPlan({ error: "Customer not found" });`);
     }
 
     const customerId = customerData.customers[0].id;
@@ -47,22 +44,32 @@ export default async function handler(req, res) {
     const subsData = await subsResp.json();
 
     if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
-      return res.status(200).send(`window.renderPlan({ error: "No subscriptions" });`);
+      res.setHeader("Content-Type", "application/javascript");
+      return res.status(404).send(`window.renderPlan({ error: "No active subscriptions found" });`);
     }
 
     const subscription = subsData.subscriptions[0];
-    const frequency = subscription.order_interval_unit === "day"
-      ? (subscription.order_interval_frequency === 7 ? "1 week"
-        : subscription.order_interval_frequency === 14 ? "2 weeks"
-        : `${subscription.order_interval_frequency} days`)
-      : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
-    return res.status(200).send(`window.renderPlan({
-      plan: ${JSON.stringify(frequency)},
-      product_title: ${JSON.stringify(subscription.product_title)}
-    });`);
+    const frequency =
+      subscription.order_interval_unit === "day"
+        ? subscription.order_interval_frequency === 7
+          ? "1 week"
+          : subscription.order_interval_frequency === 14
+          ? "2 weeks"
+          : `${subscription.order_interval_frequency} days`
+        : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
+
+    // ✅ Send JavaScript code for script injection
+    res.setHeader("Content-Type", "application/javascript");
+    return res.status(200).send(
+      `window.renderPlan(${JSON.stringify({
+        plan: frequency,
+        product_title: subscription.product_title,
+      })});`
+    );
   } catch (err) {
-    console.error("❌ Backend error:", err);
-    return res.status(200).send(`window.renderPlan({ error: "Server error" });`);
+    console.error("Server error:", err);
+    res.setHeader("Content-Type", "application/javascript");
+    return res.status(500).send(`window.renderPlan({ error: "Server error" });`);
   }
 }
