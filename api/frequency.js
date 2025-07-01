@@ -1,10 +1,12 @@
 export default async function handler(req, res) {
+  // CORS HEADERS — must be at top
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  // Handle preflight
   if (req.method === "OPTIONS") {
-    return res.status(200).end(); // ✅ Handle CORS preflight
+    return res.status(200).end();
   }
 
   const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
@@ -15,15 +17,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const customerResp = await fetch(
-      `https://api.rechargeapps.com/customers?email=${encodeURIComponent(customerEmail)}`,
-      {
-        headers: {
-          "X-Recharge-Access-Token": RECHARGE_API_KEY,
-          Accept: "application/json",
-        },
+    const customerResp = await fetch(`https://api.rechargeapps.com/customers?email=${encodeURIComponent(customerEmail)}`, {
+      headers: {
+        "X-Recharge-Access-Token": RECHARGE_API_KEY,
+        "Accept": "application/json"
       }
-    );
+    });
 
     const customerData = await customerResp.json();
 
@@ -33,15 +32,12 @@ export default async function handler(req, res) {
 
     const customerId = customerData.customers[0].id;
 
-    const subsResp = await fetch(
-      `https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`,
-      {
-        headers: {
-          "X-Recharge-Access-Token": RECHARGE_API_KEY,
-          Accept: "application/json",
-        },
+    const subsResp = await fetch(`https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`, {
+      headers: {
+        "X-Recharge-Access-Token": RECHARGE_API_KEY,
+        "Accept": "application/json"
       }
-    );
+    });
 
     const subsData = await subsResp.json();
 
@@ -61,10 +57,11 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       plan: frequency,
-      product_title: subscription.product_title,
+      product_title: subscription.product_title
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("API error:", err);
     return res.status(500).json({ error: "Server error retrieving plan" });
   }
 }
