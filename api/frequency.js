@@ -1,12 +1,17 @@
 export default async function handler(req, res) {
-  // ✅ Fix CORS
-  res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com");
+  // ✅ Handle CORS for both root and www domains
+  const origin = req.headers.origin;
+  if (origin === "https://eatfare.com" || origin === "https://www.eatfare.com") {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Content-Type", "application/json");
 
+  // ✅ Handle preflight for Safari
   if (req.method === "OPTIONS") {
-    return res.status(204).end(); // preflight pass
+    return res.status(204).end();
   }
 
   const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
@@ -17,6 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 🔄 Get customer ID from Recharge
     const customerResp = await fetch(`https://api.rechargeapps.com/customers?email=${encodeURIComponent(customerEmail)}`, {
       headers: {
         "X-Recharge-Access-Token": RECHARGE_API_KEY,
@@ -29,12 +35,14 @@ export default async function handler(req, res) {
     }
 
     const customerData = await customerResp.json();
+
     if (!customerData.customers || customerData.customers.length === 0) {
       return res.status(404).json({ error: "Customer not found" });
     }
 
     const customerId = customerData.customers[0].id;
 
+    // 📦 Get subscription info
     const subsResp = await fetch(`https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`, {
       headers: {
         "X-Recharge-Access-Token": RECHARGE_API_KEY,
@@ -47,6 +55,7 @@ export default async function handler(req, res) {
     }
 
     const subsData = await subsResp.json();
+
     if (!subsData.subscriptions || subsData.subscriptions.length === 0) {
       return res.status(404).json({ error: "No active subscriptions found" });
     }
