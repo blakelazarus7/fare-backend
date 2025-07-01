@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   // ✅ Always return proper content type
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "https://eatfare.com");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Content-Type", "application/json"); // 🛡️ Force this always
