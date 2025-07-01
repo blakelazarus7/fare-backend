@@ -1,12 +1,11 @@
 export default async function handler(req, res) {
   const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
 
-  // Allow all origins for script injection or fetch fallback
+  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -59,7 +58,6 @@ export default async function handler(req, res) {
           : `${subscription.order_interval_frequency} days`
         : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
-    // ✅ Send JavaScript code for script injection
     res.setHeader("Content-Type", "application/javascript");
     return res.status(200).send(
       `window.renderPlan(${JSON.stringify({
