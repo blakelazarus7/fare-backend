@@ -1,7 +1,18 @@
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "https://www.eatfare.com"); // ✅ SPECIFIC origin
-res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  const allowedOrigins = [
+    "https://www.eatfare.com",
+    "https://eatfare.com",
+    "https://preview.replo.app", // if testing in Replo
+    "http://localhost:3000"      // local dev
+  ];
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -47,9 +58,9 @@ res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     const frequency =
       subscription.order_interval_unit === "day"
         ? subscription.order_interval_frequency === 7
-          ? "weekly"
+          ? "Weekly"
           : subscription.order_interval_frequency === 14
-          ? "biweekly"
+          ? "Every Two Weeks"
           : `${subscription.order_interval_frequency} days`
         : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
@@ -58,7 +69,7 @@ res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       product_title: subscription.product_title
     });
   } catch (err) {
-    console.error(err);
+    console.error("Recharge fetch failed:", err);
     return res.status(500).json({ error: "Server error retrieving plan" });
   }
 }
