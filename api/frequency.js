@@ -1,21 +1,10 @@
 export default async function handler(req, res) {
-  const allowedOrigins = [
-    "https://www.eatfare.com",
-    "https://eatfare.com",
-    "https://preview.replo.app", // if testing in Replo
-    "http://localhost:3000"      // local dev
-  ];
-
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    return res.status(200).end();
+    return res.status(200).end(); // ✅ Handle CORS preflight
   }
 
   const RECHARGE_API_KEY = "sk_1x1_195a6d72ab5445ab862e1b1c36afeb23d4792ea170cd8b698a999eb8322bb81c";
@@ -26,12 +15,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const customerResp = await fetch(`https://api.rechargeapps.com/customers?email=${encodeURIComponent(customerEmail)}`, {
-      headers: {
-        "X-Recharge-Access-Token": RECHARGE_API_KEY,
-        "Accept": "application/json"
+    const customerResp = await fetch(
+      `https://api.rechargeapps.com/customers?email=${encodeURIComponent(customerEmail)}`,
+      {
+        headers: {
+          "X-Recharge-Access-Token": RECHARGE_API_KEY,
+          Accept: "application/json",
+        },
       }
-    });
+    );
 
     const customerData = await customerResp.json();
 
@@ -41,12 +33,15 @@ export default async function handler(req, res) {
 
     const customerId = customerData.customers[0].id;
 
-    const subsResp = await fetch(`https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`, {
-      headers: {
-        "X-Recharge-Access-Token": RECHARGE_API_KEY,
-        "Accept": "application/json"
+    const subsResp = await fetch(
+      `https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`,
+      {
+        headers: {
+          "X-Recharge-Access-Token": RECHARGE_API_KEY,
+          Accept: "application/json",
+        },
       }
-    });
+    );
 
     const subsData = await subsResp.json();
 
@@ -58,18 +53,18 @@ export default async function handler(req, res) {
     const frequency =
       subscription.order_interval_unit === "day"
         ? subscription.order_interval_frequency === 7
-          ? "Weekly"
+          ? "weekly"
           : subscription.order_interval_frequency === 14
-          ? "Every Two Weeks"
+          ? "biweekly"
           : `${subscription.order_interval_frequency} days`
         : `${subscription.order_interval_frequency} ${subscription.order_interval_unit}`;
 
     return res.status(200).json({
       plan: frequency,
-      product_title: subscription.product_title
+      product_title: subscription.product_title,
     });
   } catch (err) {
-    console.error("Recharge fetch failed:", err);
+    console.error(err);
     return res.status(500).json({ error: "Server error retrieving plan" });
   }
 }
