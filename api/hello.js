@@ -89,6 +89,6 @@ export default async function handler(req, res) {
     carbonFootprintAvoided,
     waterSaved,
     customerId: customer.id,
-    email: customer.email // ✅ THIS FIXES YOUR RECHARGE PULL
+    email: customer.email // ✅ Final fix — this unlocks Recharge
   });
 }
