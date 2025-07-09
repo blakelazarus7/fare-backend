@@ -23,6 +23,7 @@ export default async function handler(req, res) {
         {
           customer(customerAccessToken: "${token}") {
             id
+            email
             orders(first: 100) {
               edges {
                 node {
@@ -54,7 +55,8 @@ export default async function handler(req, res) {
       carbonSequestered: 0,
       carbonFootprintAvoided: 0,
       waterSaved: 0,
-      customerId: null
+      customerId: null,
+      email: null
     });
   }
 
@@ -86,6 +88,7 @@ export default async function handler(req, res) {
     carbonSequestered,
     carbonFootprintAvoided,
     waterSaved,
-    customerId: customer.id
+    customerId: customer.id,
+    email: customer.email // ✅ THIS FIXES YOUR RECHARGE PULL
   });
 }
